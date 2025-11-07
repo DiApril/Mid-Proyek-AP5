@@ -9,7 +9,7 @@ db = mysql.connector.connect(
     host=os.getenv("DB_HOST"),
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASSWORD"),
-    database=os.getenv(""),
+    database=os.getenv("DB_NAME"),
     port=int(os.getenv("DB_PORT"))
 )
 cursor = db.cursor()
@@ -26,40 +26,40 @@ cursor = db.cursor()
 # 1. Tabel user
 # cursor.execute('''
 #     CREATE TABLE IF NOT EXISTS users (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         username TEXT NOT NULL UNIQUE,
-#         password_hash TEXT NOT NULL
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         username VARCHAR(100) NOT NULL UNIQUE,
+#         password_hash VARCHAR(255) NOT NULL
 #     )
 # ''')
 
 # # 2. Tabel karakter dalam game
 # cursor.execute('''
 #     CREATE TABLE IF NOT EXISTS characters (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         user_id INTEGER NOT NULL UNIQUE,
-#         role TEXT NOT NULL,
-#         hp INTEGER NOT NULL,
-#         max_hp INTEGER NOT NULL,
-#         energi INTEGER NOT NULL,
-#         max_energi INTEGER NOT NULL,
-#         deff INTEGER NOT NULL,
-#         damage INTEGER NOT NULL,
-#         gold INTEGER DEFAULT 10,
-#         exp INTEGER DEFAULT 0,
-#         score INTEGER DEFAULT 0,
-#         title TEXT DEFAULT 'Newbie',
-#         current_floor INTEGER DEFAULT 1,
-#         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-#     )
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         user_id INT NOT NULL UNIQUE,
+#         role VARCHAR(50) NOT NULL,
+#         hp INT NOT NULL,
+#         max_hp INT NOT NULL,
+#         energi INT NOT NULL,
+#         max_energi INT NOT NULL,
+#         deff INT NOT NULL,
+#         damage INT NOT NULL,
+#         gold INT DEFAULT 10,
+#         exp INT DEFAULT 0,
+#         score INT DEFAULT 0,
+#         title VARCHAR(100) DEFAULT 'Newbie',
+#         current_floor INT DEFAULT 1,
+#         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+#     ) ENGINE=InnoDB;
 # ''')
 
 # # 3. Tabel item untuk karakter
 # cursor.execute('''
 #     CREATE TABLE IF NOT EXISTS inventory (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         character_id INTEGER NOT NULL,
-#         item_name TEXT NOT NULL,
-#         quantity INTEGER NOT NULL,
-#         FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
-#     )
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         character_id INT NOT NULL,
+#         item_name VARCHAR(100) NOT NULL,
+#         quantity INT NOT NULL,
+#         FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+#     ) ENGINE=InnoDB;
 # ''')
