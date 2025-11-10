@@ -29,7 +29,6 @@ class Fighter(Character):
     def __init__(self, user_id: int):
         super().__init__(user_id, "Fighter", hp=250, energy=130, defense=150, damage=80)
 
-
 def create_character(user_id: int):
     print("\n=== PEMBUATAN KARAKTER BARU ===")
     print("1. Archmage  - Penyihir kuat dengan energi besar")
@@ -75,7 +74,6 @@ def create_character(user_id: int):
         char_id = cursor.fetchone()["id"]
         char.character_id = char_id
 
-        # Starter items (ambil dari shop_items)
         cursor.execute("SELECT id FROM shop_items WHERE item_name = 'Health Potion'")
         potion_id = cursor.fetchone()["id"]
         cursor.execute("SELECT id FROM shop_items WHERE item_name = 'Iron Sword'")
@@ -101,7 +99,6 @@ def create_character(user_id: int):
         return None
 
     return char
-
 
 def load_character_by_user_id(user_id: int):
     try:
@@ -158,7 +155,6 @@ def show_inventory(character_id: int):
         print(f"[{item['id']}] {item['item_name']} ({item['item_type']}) x{item['quantity']} — {item['description']}")
     return items
 
-
 def use_item(character_id: int, item_id: int):
     cursor.execute("""
         SELECT s.item_name, s.item_type, s.description, i.quantity
@@ -200,7 +196,6 @@ def use_item(character_id: int, item_id: int):
     cursor.execute("UPDATE inventory SET quantity = quantity - 1 WHERE id = %s;", (item_id,))
     db.commit()
 
-
 def sell_item(character_id: int, item_id: int):
     cursor.execute("""
         SELECT s.item_name, s.price, i.quantity
@@ -223,7 +218,6 @@ def sell_item(character_id: int, item_id: int):
     cursor.execute("UPDATE characters SET gold = gold + %s WHERE id = %s;", (sell_price, character_id))
     db.commit()
     print(f"Kamu menjual {item['item_name']} dan mendapatkan {sell_price} gold.")
-
 
 def inventory_menu(character_id: int):
     while True:
