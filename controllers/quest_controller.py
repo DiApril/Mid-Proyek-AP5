@@ -2,6 +2,7 @@
 import random
 from models.quest_model import QuestData
 from controllers.leaderboard_controller import update_player_score
+from utils.database import db, cursor
 
 class QuestController:
     def __init__(self, character):
@@ -61,23 +62,25 @@ class QuestController:
             self.character.pengalaman += self.active_quest.hadiah_exp
             print(f"✅ Quest berhasil! Kamu mendapat {self.active_quest.hadiah_uang} gold dan {self.active_quest.hadiah_exp} exp.")
 
-            # Tambahkan skor berdasarkan jenis quest
+            # Update skor setelah quest selesai
+            update_score_after_quest(self.character, self.active_quest.kesulitan)
+
+            # Tambahkan logika level up & boss
             if self.active_quest.tipe == "boss":
-                self.character.skor += 100  # skor besar untuk boss
                 self.level_up_setelah_boss()
             else:
-                base_score = {"mudah": 10, "sedang": 20, "sulit": 30}[self.active_quest.kesulitan]
-                self.character.skor += base_score
                 self.character.quest_selesai += 1
                 print(f"📜 Quest selesai: {self.character.quest_selesai}/3 sebelum boss muncul.")
-                print(f"🏆 Skor +{base_score} (Total: {self.character.skor})")
+                print(f"🏆 Total Skor: {self.character.skor}")
+
+            # Simpan hasil perubahan karakter ke database
+            self.update_character_database()
 
             # Update skor ke leaderboard
             update_player_score(self.character.user_id, self.character.skor)
 
         else:
             print("❌ Quest gagal! Tidak mendapat hadiah.")
-            self.character.skor -= 5
 
         self.active_quest = None
         print(f"💰 Gold: {self.character.uang} | ⭐ EXP: {self.character.pengalaman} | 🏆 Skor: {self.character.skor}\n")
@@ -90,3 +93,71 @@ class QuestController:
         self.character.bisa_lawan_boss = False
         print(f"🎉 LEVEL UP! Sekarang Level {self.character.level} - Gelar: {self.character.gelar}")
         print(f"🏆 Bonus Skor +100 (Total: {self.character.skor})\n")
+
+        # Update database juga setelah boss dikalahkan
+        self.update_character_database()
+
+    # 🔧 Simpan hasil perubahan karakter ke database
+    def update_character_database(self):
+        try:
+            sql = """
+                UPDATE characters
+                SET gold = %s,
+                    exp = %s,
+                    score = %s,
+                    floor = %s,
+                    title = %s
+                WHERE user_id = %s
+            """
+            values = (
+                self.character.uang,
+                self.character.pengalaman,
+                self.character.skor,
+                getattr(self.character, 'level', 1),
+                getattr(self.character, 'gelar', 'Novice'),
+                self.character.user_id
+            )
+            cursor.execute(sql, values)
+            db.commit()
+            print("💾 Data karakter berhasil diperbarui ke database.\n")
+        except Exception as e:
+            db.rollback()
+            print(f"⚠️ Gagal memperbarui database: {e}\n")
+
+
+# Fungsi tambahan untuk perhitungan skor otomatis
+def update_score_after_quest(character, kesulitan_quest):
+    """
+    Fungsi untuk update score setelah quest selesai berdasarkan kesulitan
+    """
+    score_map = {
+        "mudah": 15,
+        "sedang": 40,
+        "sulit": 80,
+        "epik": 300
+    }
+
+    score_gained = score_map.get(kesulitan_quest, 10)
+
+    # Pastikan karakter punya atribut ID dan skor
+    if hasattr(character, 'user_id'):
+        if not hasattr(character, 'skor'):
+            character.skor = 0
+
+        character.skor += score_gained
+        update_player_score(character.user_id, character.skor)
+        print(f"🏆 Skor +{score_gained} (Total: {character.skor})")
+
+        # Simpan juga skor terbaru ke database
+        try:
+            cursor.execute(
+                "UPDATE characters SET score = %s WHERE user_id = %s",
+                (character.skor, character.user_id)
+            )
+            db.commit()
+            print("💾 Skor karakter berhasil disimpan ke database.\n")
+        except Exception as e:
+            db.rollback()
+            print(f"⚠️ Gagal menyimpan skor ke database: {e}")
+    else:
+        print("⚠️ Character ID tidak ditemukan, skor tidak dapat diupdate.")
